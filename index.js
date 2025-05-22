@@ -35,11 +35,6 @@ try {
   }
 }
 
-//args.hashEnd === "" ? "HEAD" : args.hashEnd;
-
-//const pullExec = `cd ${args.location} && git pull`
-//const logExec = `cd ${args.location} && git log --pretty=format:'%H|%s|%an' ${args.hashStart}..${args.hashEnd}`;
-
 function startProcess(pullExec, logExec) {
   return new Promise((resolve, reject) => {
 
@@ -63,23 +58,4 @@ function startProcess(pullExec, logExec) {
     });
   })
 }
-
-/*const spinner = ora("Processing...").start();
-try {
-  const result = await startProcess();
-  spinner.succeed(result);
-} catch (err) {
-  spinner.fail(err);
-}
-
-process.on('uncaughtException', (error) => {
-  console.log("YOLO")
-
-  if (error.name === "ExitPromptError") {
-    console.log("cya.");
-  }
-  else {
-    throw error;
-  }
-});*/
 
