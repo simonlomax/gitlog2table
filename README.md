@@ -1,4 +1,4 @@
-##gitlog2table
+## gitlog2table
 
 The purpose of this app is to convert a git log to a markdown table.
 
