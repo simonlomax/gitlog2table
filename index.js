@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+
 import clipboard from 'clipboardy';
 import child_process from 'child_process';
 import { input, confirm } from '@inquirer/prompts';
