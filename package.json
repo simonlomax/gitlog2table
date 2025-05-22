@@ -1,0 +1,23 @@
+{
+  "name": "gitlog2table",
+  "version": "0.1.0",
+  "description": "Convert git log to Mardown table and copy to clipboard",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "git",
+    "log",
+    "markdown",
+    "clipboard"
+  ],
+  "type": "module",
+  "author": "Simon Lomax",
+  "license": "MIT",
+  "dependencies": {
+    "@inquirer/prompts": "^7.5.1",
+    "clipboardy": "^4.0.0",
+    "has-flag": "^5.0.1"
+  }
+}
