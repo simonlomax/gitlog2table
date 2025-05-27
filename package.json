@@ -1,6 +1,6 @@
 {
   "name": "gitlog2table",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "Convert git log to Mardown table and copy to clipboard",
   "main": "index.js",
   "scripts": {
