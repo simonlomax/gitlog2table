@@ -48,11 +48,19 @@ function startProcess(pullExec, logExec) {
   return new Promise((resolve, reject) => {
 
     let exec = subprocess.exec(pullExec, (err, stdout, stderr) => {
-      console.log(stdout);
-      if (stdout.toString() === undefined || stdout.toString() == "") {
-        reject("Directory does not have git initiated. Please check that it is correct.");
+
+      const out = stdout.toLowerCase();
+      const errout = stderr.toLowerCase();
+      if (err) {
+        reject("Error pulling git, make sure directory is correct and there are no conflicts/errors.")
+      }
+      if (out.includes('conflict') || errout.includes('conflict')) {
+        reject('Merge conflict detected. Aborting.')
       }
       subprocess.exec(logExec, (err, stdout, stderr) => {
+        if (err) {
+          reject('Logging error. Check hashes to ensure they are correct.');
+        }
         if (stdout.toString() === undefined || stdout.toString() === "") {
           reject('Logging returned zero results. Check your hashes to make sure they are correct.');
         }
