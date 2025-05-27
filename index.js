@@ -2,7 +2,7 @@
 
 import clipboard from 'clipboardy';
 import child_process from 'child_process';
-import { input, confirm } from '@inquirer/prompts';
+import { input, confirm, select } from '@inquirer/prompts';
 import ora from 'ora';
 import { marked } from 'marked';
 import TerminalRenderer from 'marked-terminal';
@@ -20,9 +20,28 @@ try {
     process.exit(1);
   }
   const args = {
-    location: await input({ message: "Enter path to project directory: " }),
-    hashStart: await input({ message: "Enter starting commit hash: " }),
-    hashEnd: await input({ message: "Enter ending commit hash (or HEAD for latest): " })
+    location: await input({ message: "Enter path to project directory:" }),
+    repoName: await input({ message: "Enter name of repository:" }),
+    providerName: await select({
+      message: "Select a git provider:",
+      choices: [
+        {
+          name: 'GitHub',
+          value: 'github'
+        },
+        {
+          name: 'BitBucket',
+          value: 'bitbucket'
+        },
+        {
+          name: 'Other/None',
+          value: 'other'
+        }
+      ]
+    }),
+    orgName: await input({ message: "Enter user/org name (or N/A):" }),
+    hashStart: await input({ message: "Enter starting commit hash:" }),
+    hashEnd: await input({ message: "Enter ending commit hash (or HEAD for latest):" })
   }
 
   args.hashEnd === "" ? "HEAD" : args.hashEnd;
@@ -30,7 +49,7 @@ try {
   const logExec = `cd ${args.location} && git log --pretty=format:'%H|%s|%an' ${args.hashStart}..${args.hashEnd}`;
   const spinner = ora("Processing...").start();
   try {
-    const result = await startProcess(pullExec, logExec);
+    const result = await startProcess(pullExec, logExec, args.providerName, args.repoName, args.orgName);
     spinner.succeed(result.msg);
     console.log(marked.parse(result.markdown));
   } catch (err) {
@@ -44,7 +63,7 @@ try {
   }
 }
 
-function startProcess(pullExec, logExec) {
+function startProcess(pullExec, logExec, provider, repo, org) {
   return new Promise((resolve, reject) => {
 
     let exec = subprocess.exec(pullExec, (err, stdout, stderr) => {
@@ -68,7 +87,15 @@ function startProcess(pullExec, logExec) {
         let markdown = '||**Hash**|**Description**|**Author**|\n|---|---|---|---|\n';
         for (let i = 0; i < lines.length; i++) {
           let line = lines[i].split('|');
-          markdown += '|' + (lines.length - i) + '|' + line[0].slice(0, 5) + '|' + line[1] + '|' + line[2] + '|\n';
+          let hashLine = line[0].slice(0, 5);
+          if (provider === "github") {
+            hashLine = `[${line[0].slice(0, 5)}](https://github.com/${org}/${repo}/commit/${line[0]})`;
+          }
+          else if (provider === "bitbucket") {
+            hashLine = `[${line[0].slice(0, 5)}](https://bitbucket.org/${org}/${repo}/commits/${line[0]})`;
+          }
+
+          markdown += '|' + (lines.length - i) + '|' + hashLine + '|' + line[1] + '|' + line[2] + '|\n';
         }
         clipboard.writeSync(markdown);
         let result = {
