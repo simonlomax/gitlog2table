@@ -4,6 +4,12 @@ import clipboard from 'clipboardy';
 import child_process from 'child_process';
 import { input, confirm } from '@inquirer/prompts';
 import ora from 'ora';
+import { marked } from 'marked';
+import TerminalRenderer from 'marked-terminal';
+
+marked.setOptions({
+  renderer: new TerminalRenderer()
+});
 
 const subprocess = child_process;
 try {
@@ -25,7 +31,8 @@ try {
   const spinner = ora("Processing...").start();
   try {
     const result = await startProcess(pullExec, logExec);
-    spinner.succeed(result);
+    spinner.succeed(result.msg);
+    console.log(marked.parse(result.markdown));
   } catch (err) {
     spinner.fail(err);
   }
@@ -41,10 +48,19 @@ function startProcess(pullExec, logExec) {
   return new Promise((resolve, reject) => {
 
     let exec = subprocess.exec(pullExec, (err, stdout, stderr) => {
-      if (stdout.toString() === undefined || stdout.toString() == "") {
-        reject("Directory does not have git initiated. Please check that it is correct.");
+
+      const out = stdout.toLowerCase();
+      const errout = stderr.toLowerCase();
+      if (err) {
+        reject("Error pulling git, make sure directory is correct and there are no conflicts/errors.")
+      }
+      if (out.includes('conflict') || errout.includes('conflict')) {
+        reject('Merge conflict detected. Aborting.')
       }
       subprocess.exec(logExec, (err, stdout, stderr) => {
+        if (err) {
+          reject('Logging error. Check hashes to ensure they are correct.');
+        }
         if (stdout.toString() === undefined || stdout.toString() === "") {
           reject('Logging returned zero results. Check your hashes to make sure they are correct.');
         }
@@ -55,7 +71,11 @@ function startProcess(pullExec, logExec) {
           markdown += '|' + (lines.length - i) + '|' + line[0].slice(0, 5) + '|' + line[1] + '|' + line[2] + '|\n';
         }
         clipboard.writeSync(markdown);
-        resolve('Table copied to clipboard');
+        let result = {
+          "msg": "Table copied to clipboard",
+          "markdown": markdown
+        }
+        resolve(result);
       });
     });
   })
